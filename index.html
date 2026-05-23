@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4a90d9" id="theme-color-meta">
+  <title>調乳計算機</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    /* ── CSS変数（ライトモード） ── */
+    :root {
+      --bg:          #f0f6ff;
+      --card:        #ffffff;
+      --card-shadow: rgba(0,0,0,0.08);
+      --text:        #333333;
+      --text-muted:  #888888;
+      --text-label:  #555555;
+      --primary:     #2c5f8a;
+      --accent:      #4a90d9;
+      --step-bg:     #f7faff;
+      --step-hl-bg:  #fff8e6;
+      --result-bg:   #f0f6ff;
+      --btn-border:  #d0e4f7;
+      --btn-hover:   #e8f3fc;
+      --slider-track:#d0e4f7;
+      --hint-bg:     #fff8ec;
+      --hint-color:  #e07b00;
+      --warn-bg:     #fff3f3;
+      --warn-color:  #c0392b;
+    }
+
+    /* ── ダークモード変数 ── */
+    [data-theme="dark"] {
+      --bg:          #151b27;
+      --card:        #1f2737;
+      --card-shadow: rgba(0,0,0,0.4);
+      --text:        #dce8f5;
+      --text-muted:  #6a7f96;
+      --text-label:  #9ab5cc;
+      --primary:     #7bbde8;
+      --accent:      #5a9fd4;
+      --step-bg:     #28334a;
+      --step-hl-bg:  #2e2516;
+      --result-bg:   #1a2336;
+      --btn-border:  #2d4259;
+      --btn-hover:   #263548;
+      --slider-track:#2d4259;
+      --hint-bg:     #2a1f0a;
+      --hint-color:  #f0a840;
+      --warn-bg:     #2a1010;
+      --warn-color:  #e87070;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 48px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* ── ヘッダー ── */
+    .header {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    h1 { font-size: 1.3rem; color: var(--primary); }
+
+    .dark-toggle {
+      background: none;
+      border: 2px solid var(--btn-border);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .dark-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+    .subtitle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    /* ── カード ── */
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 18px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 2px 12px var(--card-shadow);
+      margin-bottom: 12px;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+
+    .label {
+      font-size: 0.82rem;
+      color: var(--text-label);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .sub-label {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    /* ── ヒント・警告 ── */
+    .kettle-hint {
+      font-size: 0.78rem;
+      color: var(--hint-color);
+      margin-top: 8px;
+      padding: 6px 10px;
+      background: var(--hint-bg);
+      border-radius: 8px;
+      display: none;
+    }
+    .kettle-hint.show { display: block; }
+
+    .kettle-warn {
+      font-size: 0.75rem;
+      color: var(--warn-color);
+      margin-top: 6px;
+      padding: 6px 10px;
+      background: var(--warn-bg);
+      border-radius: 8px;
+      display: none;
+    }
+    .kettle-warn.show { display: block; }
+
+    /* ── ボタングループ ── */
+    .btn-group { display: flex; gap: 8px; }
+
+    .btn-group.two-rows { flex-wrap: wrap; }
+    .btn-group.two-rows .btn {
+      flex: 1 1 calc(33% - 6px);
+      min-width: 0;
+      font-size: 0.95rem;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px 4px;
+      border: 2px solid var(--btn-border);
+      border-radius: 10px;
+      background: var(--card);
+      font-size: 1rem;
+      color: var(--primary);
+      cursor: pointer;
+      transition: all 0.15s;
+      font-weight: 600;
+    }
+    .btn:hover { background: var(--btn-hover); }
+    .btn.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .btn-warm { border-color: #c8891a; color: #c8891a; }
+    .btn-warm.selected { background: #f5a623; border-color: #f5a623; color: #fff; }
+
+    .btn-cool { border-color: #4a8fbb; color: #4a8fbb; }
+    .btn-cool.selected { background: #5ab4e8; border-color: #5ab4e8; color: #fff; }
+
+    /* ── スライダー ── */
+    .slider-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slider-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1;
+    }
+    .slider-value .unit {
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--slider-track);
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    /* ── 結果カード ── */
+    .result-card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 22px 18px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 2px 12px var(--card-shadow);
+      display: none;
+      transition: background 0.3s;
+    }
+    .result-card.show { display: block; }
+
+    .result-header {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .steps { display: flex; flex-direction: column; gap: 10px; }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 10px;
+      background: var(--step-bg);
+    }
+    .step.highlight { background: var(--step-hl-bg); }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step.highlight .step-num { background: #f5a623; }
+
+    .step-text { font-size: 0.95rem; color: var(--text); line-height: 1.4; }
+    .step-text strong { color: var(--primary); font-size: 1.2rem; }
+    .step.highlight .step-text strong { color: var(--hint-color); }
+    .step-text .note { font-size: 0.78rem; color: var(--text-muted); }
+
+    .result-footer {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: var(--result-bg);
+      border-radius: 8px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.7;
+    }
+    .result-footer span { color: var(--primary); font-weight: 700; }
+
+    .warn {
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: var(--warn-bg);
+      border-radius: 8px;
+      font-size: 0.75rem;
+      color: var(--warn-color);
+      text-align: center;
+      display: none;
+    }
+    .warn.show { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🍼 調乳計算機</h1>
+  <button class="dark-toggle" id="dark-btn" onclick="toggleDark()">🌙</button>
+</div>
+<p class="subtitle">量・湯温・水温を選ぶだけ</p>
+
+<div class="card">
+  <div class="label">① 作る量</div>
+  <div class="slider-wrap">
+    <div class="slider-value"><span id="amount-val">100</span><span class="unit"> cc</span></div>
+    <input type="range" id="amount-slider" min="40" max="200" step="20" value="100"
+           oninput="onSlider(this)">
+    <div class="slider-labels">
+      <span>40</span><span>80</span><span>120</span><span>160</span><span>200</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="label">② ポット表示温度</div>
+  <div class="btn-group two-rows">
+    <button class="btn btn-warm" data-val="100" onclick="sel('yu',this)">100℃</button>
+    <button class="btn btn-warm" data-val="95"  onclick="sel('yu',this)">95℃</button>
+    <button class="btn btn-warm" data-val="90"  onclick="sel('yu',this)">90℃</button>
+    <button class="btn btn-warm" data-val="85"  onclick="sel('yu',this)">85℃</button>
+    <button class="btn btn-warm" data-val="80"  onclick="sel('yu',this)">80℃</button>
+  </div>
+  <div class="kettle-hint" id="kettle-hint">
+    ボトルに注いだ後の湯温目安：約<strong id="kettle-range"></strong>℃
+  </div>
+  <div class="kettle-warn" id="kettle-warn">
+    ⚠️ ボトル内の温度が70℃を下回る可能性があります。ポット温度を上げるか、温度計で確認してください。
+  </div>
+  <div class="sub-label">注ぐと3〜8℃下がります。温度計での確認を推奨します。</div>
+</div>
+
+<div class="card">
+  <div class="label">③ 水温</div>
+  <div class="btn-group">
+    <button class="btn btn-cool" data-val="5"  onclick="sel('mizu',this)">5℃</button>
+    <button class="btn btn-cool" data-val="10" onclick="sel('mizu',this)">10℃</button>
+    <button class="btn btn-cool" data-val="15" onclick="sel('mizu',this)">15℃</button>
+    <button class="btn btn-cool" data-val="20" onclick="sel('mizu',this)">20℃</button>
+  </div>
+  <div class="sub-label">冷蔵庫（野菜室）≒5℃　室温の湯冷まし≒15〜20℃</div>
+</div>
+
+<div class="result-card" id="result">
+  <div class="result-header" id="result-header"></div>
+  <div class="steps" id="steps"></div>
+  <div class="result-footer" id="result-footer"></div>
+  <div class="warn" id="warn">⚠️ 溶解温度が70℃を下回る可能性があります。湯温を上げてください。</div>
+</div>
+
+<script>
+  /* ── 定数 ── */
+  const DROP_MIN    = 3;
+  const DROP_MAX    = 8;
+  const DROP_MID    = Math.round((DROP_MIN + DROP_MAX) / 2); // 5℃
+  const CC_PER_SCOOP = 20;
+
+  /* ── 状態 ── */
+  const state = { amount: 100, yu: null, mizu: null };
+
+  /* ── ダークモード ── */
+  function applyTheme(dark) {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    document.getElementById('dark-btn').textContent = dark ? '☀️' : '🌙';
+    document.getElementById('theme-color-meta').content = dark ? '#151b27' : '#4a90d9';
+  }
+
+  function toggleDark() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = !isDark;
+    applyTheme(next);
+    localStorage.setItem('chounyu-dark', next ? '1' : '0');
+  }
+
+  // 初期テーマ：保存値 → システム設定 の順で決定
+  (function initTheme() {
+    const saved = localStorage.getItem('chounyu-dark');
+    if (saved !== null) {
+      applyTheme(saved === '1');
+    } else {
+      applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+  })();
+
+  /* ── localStorage 読み込み ── */
+  (function loadSaved() {
+    const saved = JSON.parse(localStorage.getItem('chounyu') || '{}');
+    if (saved.amount) {
+      state.amount = saved.amount;
+      document.getElementById('amount-slider').value = saved.amount;
+      document.getElementById('amount-val').textContent = saved.amount;
+    }
+    if (saved.yu) {
+      state.yu = saved.yu;
+      document.querySelector(`[onclick="sel('yu',this)"][data-val="${saved.yu}"]`)
+        ?.classList.add('selected');
+      const lo = saved.yu - DROP_MAX, hi = saved.yu - DROP_MIN;
+      document.getElementById('kettle-range').textContent = `${lo}〜${hi}`;
+      document.getElementById('kettle-hint').classList.add('show');
+      if (hi < 70) document.getElementById('kettle-warn').classList.add('show');
+    }
+    if (saved.mizu) {
+      state.mizu = saved.mizu;
+      document.querySelector(`[onclick="sel('mizu',this)"][data-val="${saved.mizu}"]`)
+        ?.classList.add('selected');
+    }
+    render();
+  })();
+
+  function save() {
+    localStorage.setItem('chounyu', JSON.stringify(state));
+  }
+
+  /* ── イベント ── */
+  function onSlider(input) {
+    state.amount = parseInt(input.value);
+    document.getElementById('amount-val').textContent = state.amount;
+    save(); render();
+  }
+
+  function sel(key, btn) {
+    document.querySelectorAll(`[onclick="sel('${key}',this)"]`)
+      .forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state[key] = parseInt(btn.dataset.val);
+
+    if (key === 'yu') {
+      const lo = state.yu - DROP_MAX, hi = state.yu - DROP_MIN;
+      document.getElementById('kettle-range').textContent = `${lo}〜${hi}`;
+      document.getElementById('kettle-hint').classList.add('show');
+      const kw = document.getElementById('kettle-warn');
+      hi < 70 ? kw.classList.add('show') : kw.classList.remove('show');
+    }
+    save(); render();
+  }
+
+  /* ── 計算・描画 ── */
+  function round5(v) { return Math.round(v / 5) * 5; }
+
+  function render() {
+    const { amount, yu, mizu } = state;
+    const result = document.getElementById('result');
+    if (!yu || !mizu) { result.classList.remove('show'); return; }
+
+    const T_eff  = yu - DROP_MID;
+    const m_yu   = round5(amount * (40 - mizu) / (T_eff - mizu));
+    const m_mizu = round5(amount * (T_eff - 40) / (T_eff - mizu));
+    const total  = m_yu + m_mizu;
+    const T_final = Math.round((m_yu * T_eff + m_mizu * mizu) / total);
+    const lo = yu - DROP_MAX, hi = yu - DROP_MIN;
+    const scoops = Math.round(amount / CC_PER_SCOOP);
+
+    document.getElementById('result-header').textContent =
+      `ポット ${yu}℃・水温 ${mizu}℃・目標 約${amount}cc`;
+
+    document.getElementById('steps').innerHTML = `
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          お湯を <strong>${m_yu}cc</strong> ボトルに注ぐ<br>
+          <span class="note">（ボトル内湯温 約${lo}〜${hi}℃）</span>
+        </div>
+      </div>
+      <div class="step highlight">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          粉ミルクを <strong>${scoops}杯</strong>（すりきり）溶かす<br>
+          <span class="note">※缶の表示もあわせてご確認ください</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">水を <strong>${m_mizu}cc</strong> 加えて完成</div>
+      </div>`;
+
+    document.getElementById('result-footer').innerHTML =
+      `合計 約<span>${total}cc</span>　最終温度 約<span>${T_final}℃</span><br>
+       必ず手首の内側で温度を確認してから与えてください`;
+
+    document.getElementById('warn').classList.toggle('show', hi < 70);
+    result.classList.add('show');
+  }
+
+  /* ── Service Worker 登録 ── */
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+</script>
+
+</body>
+</html>
