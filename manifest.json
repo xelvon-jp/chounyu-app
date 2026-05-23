@@ -1,0 +1,22 @@
+{
+  "name": "調乳計算機",
+  "short_name": "調乳",
+  "description": "お湯と水の量をすぐ計算できる調乳アシスタント",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0f6ff",
+  "theme_color": "#4a90d9",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
